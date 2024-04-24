@@ -72,7 +72,7 @@ X = np.vstack((x, y, z))
 positions = [X]
 
 def update_position(X, B, dt):
-    return X + B * dt
+    return X + 500*norm_N * B * dt
 
 # Use fewer points for arrows to avoid clutter
 arrow_indices = np.linspace(0, num_points - 1, 300, dtype=int)  # Adjust number for more or fewer arrows
