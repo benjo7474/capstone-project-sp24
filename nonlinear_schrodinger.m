@@ -1,54 +1,68 @@
-% Example usage:
-S = 4*pi;
-n = 9;
-ns = 2^n;
-T = 1;
-nt = 1000   ;
+clear; close all;
+
+ns = 2^5;
+T = 200;
+k = 2*pi;
+domain = linspace(0, 1, ns);
+% psi0 = exp(-40*(domain-0.5).^2 + 2i*pi*domain); psi0 = psi0/trapz(domain, psi0);
+psi0 = exp(1i*k*domain);
+
+%% Plot IC
+figure; hold on;
+plot(domain, real(psi0));
+plot(domain, imag(psi0));
+legend('Real Part', 'Imag Part')
+
+%% Spectral differentiation/method of lines
+[t, y] = ode23(@(t,y)ode_func(t,y,ns), [0 T], psi0);
+
+%% Finite differences with method of lines
+% e = ones(ns,1);
+% ds = domain(2)-domain(1);
+% D2 = spdiags([e -2*e e], -1:1, ns, ns);
+% D2(1,ns) = 1; D2(ns,1) = 1;
+% D2 = D2/ds;
+% tspan = [0, T];
+% ode_func = @(t,y) 1i*(0.5*(abs(y).^2).*y + D2*y);
+% [t,y] = ode23(ode_func, tspan, psi0);
+
+%% Plot
+figure;
+exact = @(t,x) exp(1i*(k*x + (k^2-0.5)*t));
+for j = 1:1:length(t)
+    plot(domain, real(y(j,:)));
+    hold on;
+    plot(domain, imag(y(j,:)));
+    soln = exact(t(j),domain);
+    plot(domain, real(soln));
+    plot(domain, imag(soln));
+    legend('Real Part (Numerical)', 'Imag Part (Numerical)', 'Real Part (Exact)', 'Imag Part (Exact)');
+    ylim([-5 5])
+    title(['$t=',num2str(t(j)),'$'],'Interpreter', 'latex');
+    drawnow
+    hold off;
+end
+
+%% Exact Solution
+exact = @(t,x) exp(1i*(k*x + (k^2+0.5)*t));
+figure;
+for j=1:1:length(t)
+    soln = exact(t(j),domain);
+    plot(domain, real(soln));
+    hold on;
+    plot(domain, imag(soln));
+    title(['$t=',num2str(t(j)),'$'],'Interpreter', 'latex');
+    drawnow;
+    hold off;
+end
 
 
+function rhs = ode_func(t,y,ns)
 
-    % Parameters
-    ds = S / (ns-1); % Spatial step size
-     
-    dt = T / (nt-1);   % Temporal step size
-    i = 1i;          
+% Make sure y is a column vector
+y = y(:);
+kvec = [0:ns/2, -ns/2+1:-1]';
+rhs = 1i*(0.5*(abs(y).^2).*y + ifft(-kvec.^2 .* fft(y)));
 
-    
-    k = 1;
-    domain = linspace(-S/2, S/2, ns);
-
-    psi0 = exp(-domain.^2 + i*domain);
-    
-
-    % Finite difference method
-   
-        
-        
-    kvec = [0:ns/2, -ns/2+1:-1]';
-            
-            
-    
-    ode_func = @(t, y) i*((1/2)*((abs(y).^2).*y + ifft( -(kvec.^2) .* fft(y))));
-    tspan = [0, T];
-    
-    [t, y] = ode45(ode_func, tspan, psi0);
-    
-    
-
-    for j = 1: length(t)
-        hold off;
-        plot(domain, imag(y(j,:)))
-        drawnow
-
-
-
-    end
-
-            
-    
-    % Plot the evolution of the solution in the complex plane
-   
-
-    
-   
+end
 
