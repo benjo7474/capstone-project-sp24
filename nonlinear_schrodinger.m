@@ -1,12 +1,13 @@
 clear; close all;
 
 ns = 2^5;
-T = 1;
-k = 2*pi;
+t = linspace(0,1,1001);
 domain = linspace(0, 1, ns+1);
 domain = domain(1:ns);
-psi0 = exp(-40*(domain-0.5).^2 + 2i*pi*domain); psi0 = psi0/trapz(domain, psi0);
-% psi0 = exp(1i*k*domain);
+ds = domain(2) - domain(1);
+k = 0;
+% psi0 = exp(-40*(domain-0.5).^2 + 2i*pi*domain); psi0 = psi0/trapz(domain, psi0);
+psi0 = exp(1i*k*domain);
 
 %% Plot IC
 figure; hold on;
@@ -15,7 +16,7 @@ plot(domain, imag(psi0));
 legend('Real Part', 'Imag Part')
 
 %% Spectral differentiation with method of lines
-[t, y] = ode23(@(t,y)ode_func(t,y,ns), [0 T], psi0);
+[t, y] = ode23(@(t,y)ode_func(t,y,ns), t, psi0);
 
 %% Finite differences with method of lines
 % e = ones(ns,1);
@@ -72,6 +73,31 @@ for j=1:2:length(t)
     hold off;
 end
 
+
+%% Compute curvature and torsion
+curvature = abs(y);
+theta = angle(y);
+torsion = (circshift(theta,-1,2) - circshift(theta,1,2))/(2*ds);
+
+%% Plot curvature
+figure;
+for j=1:1:length(t)
+    plot(domain,curvature(j,:))
+    title(['Curvature: t=',num2str(t(j))],'Interpreter','latex','FontSize',16);
+    ylim([0.5 1.5])
+    drawnow;
+end
+
+
+%% Plot torsion
+figure;
+for j=1:1:length(t)
+    plot(domain,torsion(j,:))
+    title(['Torsion: t=',num2str(t(j))],'Interpreter','latex','FontSize',16);
+    drawnow;
+end
+
+%%
 
 function rhs = ode_func(t,y,ns)
 
